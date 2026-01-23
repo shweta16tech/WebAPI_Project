@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Microsoft.Data.SqlClient;
+using inventory.Repository;
 namespace inventory.Controllers
 {
     [Route("[controller]")]
@@ -9,34 +10,19 @@ namespace inventory.Controllers
     public class UserController : ControllerBase
     {
 
-        private readonly string connectionString;
+        private readonly RUser _repo;
 
-        public UserController(IConfiguration configuration)
+        public UserController(RUser repo)
         {
-            connectionString = configuration.GetConnectionString("DefaultConnection");
+            _repo = repo;
         }
+
+        //get all users
 
         [HttpGet]
         public IActionResult GetAllUsers()
         {
-            List<User> users = new List<User>();
-            using (SqlConnection con = new SqlConnection(connectionString))
-            {
-                string query = "SELECT * FROM users";
-                SqlCommand cmd = new SqlCommand(query, con);
-                con.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    users.Add(new User
-                    {
-                        Uid = (int)reader["uid"],
-                        Uname = reader["uname"].ToString()!,
-                        Uemail = reader["uemail"].ToString(),
-                        Upass = reader["upass"].ToString()!
-                    });
-                }
-            }
+            var users = _repo.GetAllUsers();
             return Ok(users);
         }
 
