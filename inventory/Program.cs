@@ -1,4 +1,6 @@
+using inventory.Models;
 using inventory.Repository;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ builder.Services.AddScoped<RCustomer>();
 
 builder.Services.AddScoped<RProduct>();
 
+
+// Use your actual User class name here
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 
 var app = builder.Build();
