@@ -39,8 +39,11 @@ namespace inventory.Controllers
         //POST:api customer
 
         [HttpPost]
-        public IActionResult AddCustomer(Customer customer)
+        public IActionResult AddCustomer([FromBody] Customer customer)
         {
+            if (customer == null)
+                return BadRequest("Customer information is missing or invalid.");
+            customer.createdby = "John";
             _repo.AddCustomer(customer);
             return Ok("User added successfully");
         }

@@ -29,7 +29,15 @@ namespace inventory.Repository
                         Cname = reader["cname"].ToString()!,
                         Cphone = reader["cphone"].ToString()!,
                         Caddress = reader["caddress"].ToString(),
-                        Cemail = reader["cemail"].ToString()
+                        Cemail = reader["cemail"].ToString(),
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
+                        //modifiedat = (DateTime)reader["modifiedat"],
+                        //modifiedby = reader["modifiedby"].ToString()
 
                     });
                 }
@@ -56,7 +64,11 @@ namespace inventory.Repository
                         Cname = reader["cname"].ToString()!,
                         Cphone = reader["cphone"].ToString()!,
                         Caddress = reader["caddress"] == DBNull.Value ? null : reader["caddress"].ToString(),
-                        Cemail = reader["cemail"] == DBNull.Value ? null : reader["cemail"].ToString()
+                        Cemail = reader["cemail"] == DBNull.Value ? null : reader["cemail"].ToString(),
+                        createdat =(DateTime) reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
 
                     };
                 }
@@ -70,14 +82,17 @@ namespace inventory.Repository
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             {
-                string query = "INSERT INTO customer(cid,cname,cphone,caddress,cemail)" +
-                                "VALUES (@Cid,@Cname,@Cphone,@Caddress,@Cemail)";
+                string query = @"INSERT INTO customer(cid,cname,cphone,caddress,cemail,createdat,createdby)" +
+                                "VALUES (@Cid,@Cname,@Cphone,@Caddress,@Cemail,@createdat,@createdby)";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@Cid", customer.Cid);
                 cmd.Parameters.AddWithValue("@Cname", customer.Cname);
                 cmd.Parameters.AddWithValue("@Cphone", customer.Cphone);
                 cmd.Parameters.AddWithValue("@Caddress", (object?)customer.Caddress ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Cemail", (object?)customer.Cemail ?? DBNull.Value);
+
+                cmd.Parameters.AddWithValue("@createdat", customer.createdat);
+                cmd.Parameters.AddWithValue("@createdby", customer.createdby);
 
                 con.Open();
                 cmd.ExecuteNonQuery();

@@ -44,6 +44,9 @@ namespace inventory.Controllers
         [HttpPost]
         public IActionResult AddProduct(Product product)
         {
+            if (product == null)
+                return BadRequest("Product information is missing or invalid.");
+            product.createdby = "John";
             _repo.AddProduct(product);
             return Ok("Product added successfully");
         } 

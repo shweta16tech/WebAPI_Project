@@ -29,7 +29,11 @@ namespace inventory.Repository
                         Pname = reader["pname"].ToString()!,
                         Price = (decimal)reader["price"],
                         Descrip = reader["descrip"] == DBNull.Value ? null : reader["descrip"].ToString(),
-                        Pquantity = (int)reader["pquantity"]
+                        Pquantity = (int)reader["pquantity"],
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
 
                     });
                 }
@@ -56,7 +60,12 @@ namespace inventory.Repository
                         Pname = reader["pname"].ToString()!,
                         Price = (decimal)reader["price"],
                         Descrip = reader["descrip"] == DBNull.Value ? null : reader["descrip"].ToString(),
-                        Pquantity = (int)reader["pquantity"]
+                        Pquantity = (int)reader["pquantity"],
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
                     };
                 }
             }
@@ -77,6 +86,8 @@ namespace inventory.Repository
                 cmd.Parameters.AddWithValue("@Price", product.Price);
                 cmd.Parameters.AddWithValue("@Descrip", (object?)product.Descrip ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Pquantity", product.Pquantity);
+                cmd.Parameters.AddWithValue("@createdat", product.createdat);
+                cmd.Parameters.AddWithValue("@createdby", product.createdby);
 
                 con.Open();
                 cmd.ExecuteNonQuery();

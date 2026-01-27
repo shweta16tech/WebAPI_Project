@@ -29,7 +29,12 @@ namespace inventory.Repository
                         Uid = (int)reader["uid"],
                         Uname = reader["uname"].ToString()!,
                         Uemail = reader["uemail"].ToString(),
-                        UpassH = reader["upass"].ToString()!
+                        UpassH = reader["upass"].ToString()!,
+                        createdat =(DateTime) reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
                     });
                 }
                 return users;
@@ -42,13 +47,15 @@ namespace inventory.Repository
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             {
-                string query = "INSERT INTO users (uid,uname,uemail,upass)" +
-                    "VALUES(@Uid,@Uname,@Uemail,@Upass)";
+                string query = @"INSERT INTO users (uid,uname,uemail,upass,createdat,createdby)" +
+                    "VALUES(@Uid,@Uname,@Uemail,@Upass,@createdat,@createdby)";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@Uid", user.Uid);
                 cmd.Parameters.AddWithValue("@Uname", user.Uname);
                 cmd.Parameters.AddWithValue("@Uemail",(object?)user.Uemail?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Upass", user.UpassH);
+                cmd.Parameters.AddWithValue("@createdat", user.createdat);
+                cmd.Parameters.AddWithValue("@createdby", user.createdby);
 
                 con.Open();              
                 cmd.ExecuteNonQuery();
@@ -73,7 +80,14 @@ namespace inventory.Repository
                         Uid = (int)reader["uid"],
                         Uname = reader["uname"].ToString()!,
                         Uemail = reader["uemail"].ToString(),
-                        UpassH = reader["upass"].ToString()!
+                        UpassH = reader["upass"].ToString()!,
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
+                        //modifiedat = (DateTime)reader["modifiedat"],
+                        //modifiedby = reader["modifiedby"].ToString()
                     };
                 }
                 return null;

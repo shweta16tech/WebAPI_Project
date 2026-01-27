@@ -52,8 +52,8 @@ namespace inventory.Controllers
             var user = new User
             {
                 Uid = dto.Uid,
-                Uname = dto.Uname
-
+                Uname = dto.Uname,
+                createdby = "John"
             };
             //now hashing the password
             var hasher = new PasswordHasher<User>();

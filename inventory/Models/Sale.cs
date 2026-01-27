@@ -1,6 +1,6 @@
 ﻿namespace inventory.Models
 {
-    public class Sale
+    public class Sale:BaseEntity
     {
         public int Sid { get; set; }
         public DateTime Sdate { get; set; }
@@ -10,5 +10,6 @@
         public decimal Sprice { get; set; }
         public decimal Srate { get; set; }
         public decimal Totalmnt { get; set; }
+        public DateTime? invoicedate { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace inventory.Models
 {
-    public class User
+    public class User:BaseEntity
     {
         public int Uid { get; set; }
         public required string Uname { get; set; }

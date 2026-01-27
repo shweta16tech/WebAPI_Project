@@ -33,7 +33,12 @@ namespace inventory.Repository
                         Cid = (int)reader["cid"],
                         Sprice = (decimal)reader["sprice"],
                         Srate = (decimal)reader["srate"],
-                        Totalmnt = (decimal)reader["totalmnt"]
+                        Totalmnt = (decimal)reader["totalmnt"],
+                        invoicedate = reader["invoicedate"] == DBNull.Value ? null : (DateTime?)reader["invoicedate"],
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
                     });
                 }
             }
@@ -63,7 +68,13 @@ namespace inventory.Repository
                         Cid = (int)reader["cid"],
                         Sprice = (decimal)reader["sprice"],
                         Srate = (decimal)reader["srate"],
-                        Totalmnt = (decimal)reader["totalmnt"]
+                        Totalmnt = (decimal)reader["totalmnt"],
+                        invoicedate = (DateTime)reader["invoicedate"],
+                        createdat = (DateTime)reader["createdat"],
+                        createdby = reader["createdby"].ToString()!,
+                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
                     };
                 }
             }
@@ -76,8 +87,8 @@ namespace inventory.Repository
         {
             using (SqlConnection con = new SqlConnection(connectionString))
             {
-                string query = @"INSERT INTO sales(sid,sdate,squantity,pid,cid,sprice,srate,totalmnt)" +
-                                "VALUES (@Sid,@Sdate,@Squantity,@Pid,@Cid,@Sprice,@Srate,@Totalmnt)";
+                string query = @"INSERT INTO sales(sid,sdate,squantity,pid,cid,sprice,srate,totalmnt,invoicedate,createdat,createdby)" +
+                                "VALUES (@Sid,@Sdate,@Squantity,@Pid,@Cid,@Sprice,@Srate,@Totalmnt,@invoicedate,@createdat,@createdby)";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@Sid", sale.Sid);
                 cmd.Parameters.AddWithValue("@Sdate", sale.Sdate);
@@ -87,6 +98,9 @@ namespace inventory.Repository
                 cmd.Parameters.AddWithValue("@Sprice", sale.Sprice);
                 cmd.Parameters.AddWithValue("@Srate", sale.Srate);
                 cmd.Parameters.AddWithValue("@Totalmnt", sale.Totalmnt);
+                cmd.Parameters.AddWithValue("@invoicedate", sale.invoicedate);
+                cmd.Parameters.AddWithValue("@createdat", sale.createdat);
+                cmd.Parameters.AddWithValue("@createdby", sale.createdby);
 
                 con.Open();
                 cmd.ExecuteNonQuery();
