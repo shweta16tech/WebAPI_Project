@@ -6,22 +6,26 @@ using inventory.Repository;
 using inventory.DTOs;
 using Microsoft.AspNetCore.Identity;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Authorization;
 namespace inventory.Controllers
 {
+    [Authorize]
+
     [ApiController]
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
 
         private readonly RUser _repo;
+        private readonly IConfiguration _configuration;
 
-        public UserController(RUser repo)
+        public UserController(RUser repo,IConfiguration configuration)
         {
             _repo = repo;
+            _configuration = configuration;
         }
 
         //get all users
-
         [HttpGet]
         public IActionResult GetAllUsers()
         {
@@ -40,6 +44,10 @@ namespace inventory.Controllers
         [HttpPost]
         public IActionResult CreateUser(CreateUserDto dto)
         {
+            var existingUser = _repo.GetUserByName(dto.Uname);
+            if (existingUser != null)
+                return BadRequest("Username already exists.Please choose a different one"); 
+
          
             var user = new User
             {
@@ -62,6 +70,8 @@ namespace inventory.Controllers
         //login
         [HttpPost()]
         [Route("Login")]
+        [AllowAnonymous]   
+
         public IActionResult Login(LoginDto dto)
         {
             var user = _repo.GetUserByName(dto.Uname);
@@ -77,7 +87,12 @@ namespace inventory.Controllers
                                 );
             if (result == PasswordVerificationResult.Failed)
                 return Unauthorized("Invalid username or password");
-            return Ok("Login successfull");
+
+            //Generate JWT
+            var token = Helpers.JwtHelper.GenerateToken(user, _configuration);
+            
+            return Ok(new {Token=token,Username=user.Uname});
+           
         }
 
 
