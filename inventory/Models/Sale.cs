@@ -11,5 +11,6 @@
         public decimal Srate { get; set; }
         public decimal Totalmnt { get; set; }
         public DateTime? invoicedate { get; set; }
+        public IEnumerable<BaseEntity>? baseEntities { get; set; }
     }
 }

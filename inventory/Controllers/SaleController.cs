@@ -13,14 +13,43 @@ namespace inventory.Controllers
         {
             _repo = repo;
         }
-
-        //get sales
-
+        //get all sales
         [HttpGet]
         public IActionResult GetAllSales()
         {
             var sales = _repo.GetAllSales();
             return Ok(sales);
+        }
+
+        //get sales by pagination and filter
+
+        [HttpGet("filtered")]
+        public IActionResult GetSales(
+            int pageNumber = 1,
+            int pageSize = 5,
+            DateTime? fromDate = null,
+            DateTime? toDate = null,
+            int? pid = null,
+            int? cid = null
+            )
+        {
+            var sales = _repo.GetSales(
+                pageNumber,
+                pageSize,
+                fromDate,
+                toDate,
+                pid,
+                cid
+                );
+            return Ok(new
+            {
+                pageNumber,
+                pageSize,
+                count = sales.Count,
+                data = sales
+
+
+            });
         }
 
 
