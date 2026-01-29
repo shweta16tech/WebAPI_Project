@@ -14,12 +14,12 @@ namespace inventory.Controllers
             _repo = repo;
         }
         //get all sales
-        [HttpGet]
-        public IActionResult GetAllSales()
-        {
-            var sales = _repo.GetAllSales();
-            return Ok(sales);
-        }
+        //[HttpGet]
+        //public IActionResult GetAllSales()
+        //{
+        //    var sales = _repo.GetAllSales();
+        //    return Ok(sales);
+        //}
 
         //get sales by pagination and filter
 
@@ -68,14 +68,37 @@ namespace inventory.Controllers
         //post sale
         //POST:sale
 
-        [HttpPost]
-        public IActionResult AddSale(Sale sale)
+       
+
+
+        //post : sale/invoice
+        [HttpPost()]
+        public IActionResult createinvoice(Sale sale)
         {
-            if (sale == null)
-                return BadRequest("Sale information is missing or invalid.");
+            if (sale == null || sale.SaleDetails == null || !sale.SaleDetails.Any())
+                return BadRequest("Invoice must contain at least one item");
             sale.createdby = "John";
-            _repo.AddSale(sale);
-            return Ok("Sale added successfully");
+            sale.createdat = DateTime.Now;
+
+            //call repository and store the returned msg
+            string resultMessage = _repo.createinvoice(sale);
+            //check if msg indiccates success or failure
+            if (resultMessage.StartsWith("Invoice created successfully"))
+            {
+                return Ok(new { message = resultMessage });
+            }
+            else
+            {
+                return BadRequest(new { message = resultMessage });
+            }
+        }
+
+        //get sale invoices
+        [HttpGet("invoices")]
+        public IActionResult getallinvoices()
+        {
+            var invoices = _repo.getallinvoices();
+            return Ok(invoices);
         }
     }
 }
