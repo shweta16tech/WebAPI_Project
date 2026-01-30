@@ -98,5 +98,74 @@ namespace inventory.Repository
                 cmd.ExecuteNonQuery();
             }
         }
+
+
+
+
+        // Update existing customer
+        public void UpdateCustomer(Customer customer)
+        {
+            // 1. Get the current data from the database
+            var existing = GetCustomerById(customer.Cid);
+            if (existing == null)
+                return;
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                // 2. The SQL Update Statement
+                string query = @"UPDATE customer 
+                         SET cname = @Cname, 
+                             cphone = @Cphone, 
+                             caddress = @Caddress, 
+                             cemail = @Cemail, 
+                             modifiedat = @modifiedat, 
+                             modifiedby = @modifiedby 
+                         WHERE cid = @Cid";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+
+                cmd.Parameters.AddWithValue("@Cid", customer.Cid);
+
+                // Only update if Cname is provided and not the default Swagger "string"
+                cmd.Parameters.AddWithValue("@Cname", string.IsNullOrWhiteSpace(customer.Cname) || customer.Cname == "string"
+                    ? existing.Cname : customer.Cname);
+
+                cmd.Parameters.AddWithValue("@Cphone", string.IsNullOrWhiteSpace(customer.Cphone) || customer.Cphone == "string"
+                    ? existing.Cphone : customer.Cphone);
+
+                cmd.Parameters.AddWithValue("@Caddress", customer.Caddress == null || customer.Caddress == "string"
+                    ? (object?)existing.Caddress ?? DBNull.Value : customer.Caddress);
+
+                cmd.Parameters.AddWithValue("@Cemail", customer.Cemail == null || customer.Cemail == "string"
+                    ? (object?)existing.Cemail ?? DBNull.Value : customer.Cemail);
+
+                // Audit tracking
+                cmd.Parameters.AddWithValue("@modifiedat", DateTime.Now);
+                cmd.Parameters.AddWithValue("@modifiedby", customer.modifiedby ?? "System");
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+
+
+        // Delete customer by id
+        public bool DeleteCustomer(int id)
+        {
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                string query = "DELETE FROM customer WHERE cid = @cid";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@cid", id);
+
+                con.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+
+                // Returns true if a row was actually deleted
+                return rowsAffected > 0;
+            }
+        }
+
     }
 }

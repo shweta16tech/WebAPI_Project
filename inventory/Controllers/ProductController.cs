@@ -49,7 +49,45 @@ namespace inventory.Controllers
             product.createdby = "John";
             _repo.AddProduct(product);
             return Ok("Product added successfully");
-        } 
+        }
+
+
+
+
+        // PUT: api/Product/1
+        [HttpPut()]
+        public IActionResult UpdateProduct([FromBody] Product product)
+        {
+            if (product == null) 
+                return BadRequest();
+
+            var existing = _repo.GetProductByID(product.Pid);
+            if (existing == null) 
+                return NotFound($"Product with ID {product.Pid} not found.");
+
+            product.modifiedby = "John"; 
+            _repo.UpdateProduct(product);
+
+            return Ok("Product updated successfully.");
+        }
+
+        // DELETE: api/Product/1
+        [HttpDelete("{id}")]
+        public IActionResult DeleteProduct(int id)
+        {
+            bool isDeleted = _repo.DeleteProduct(id);
+            if (!isDeleted)
+            {
+                return NotFound($"Product with ID {id} not found.");
+            }
+
+            return Ok("Product deleted successfully.");
+        }
+
+
+
+
+
     }
 }
 

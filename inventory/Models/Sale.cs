@@ -7,12 +7,6 @@
         public int Cid { get; set; }
         public decimal Totalmnt { get; set; }
         public DateTime? invoicedate { get; set; }
-        
         public List<SaleDetail> SaleDetails { get; set; }
-
-        //public int Squantity { get; set; }
-        //public int Pid { get; set; }
-        //public decimal Sprice { get; set; }
-        //public decimal Srate { get; set; }
     }
 }

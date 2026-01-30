@@ -51,6 +51,8 @@ builder.Services.AddScoped<RUser>();
 builder.Services.AddScoped<RCustomer>();
 
 builder.Services.AddScoped<RProduct>();
+builder.Services.AddScoped<RSaleDetail>();
+
 
 //JWT configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");

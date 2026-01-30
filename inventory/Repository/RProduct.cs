@@ -93,5 +93,70 @@ namespace inventory.Repository
                 cmd.ExecuteNonQuery();
             }
         }
+
+
+
+
+        // Update product by id
+        public void UpdateProduct(Product product)
+        {
+            //fetch current data
+            var existing = GetProductByID(product.Pid);
+            if (existing == null) 
+                return;
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                string query = @"UPDATE product 
+                         SET pname = @Pname, 
+                             price = @Price, 
+                             descrip = @Descrip, 
+                             pquantity = @Pquantity, 
+                             modifiedat = @modifiedat, 
+                             modifiedby = @modifiedby 
+                         WHERE pid = @Pid";
+
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@Pid", product.Pid);
+
+                cmd.Parameters.AddWithValue("@Pname", string.IsNullOrWhiteSpace(product.Pname) || product.Pname == "string"
+                    ? existing.Pname : product.Pname);
+
+                cmd.Parameters.AddWithValue("@Price", product.Price <= 0 ? existing.Price : product.Price);
+
+                cmd.Parameters.AddWithValue("@Descrip", product.Descrip == null || product.Descrip == "string"
+                    ? (object?)existing.Descrip ?? DBNull.Value : product.Descrip);
+
+                cmd.Parameters.AddWithValue("@Pquantity", product.Pquantity <= 0 ? existing.Pquantity : product.Pquantity);
+
+                cmd.Parameters.AddWithValue("@modifiedat", DateTime.Now);
+                cmd.Parameters.AddWithValue("@modifiedby", product.modifiedby ?? "System");
+
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        // Delete product by id
+        public bool DeleteProduct(int id)
+        {
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                string query = "DELETE FROM product WHERE pid = @Pid";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.Parameters.AddWithValue("@Pid", id);
+
+                con.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
+            }
+        }
+
+
+
+
+
+        //edit product by id
+        //delete product by id
     }
 }

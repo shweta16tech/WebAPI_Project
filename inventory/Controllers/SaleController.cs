@@ -21,6 +21,7 @@ namespace inventory.Controllers
         //    return Ok(sales);
         //}
 
+
         //get sales by pagination and filter
 
         [HttpGet("filtered")]
@@ -52,7 +53,6 @@ namespace inventory.Controllers
             });
         }
 
-
         //get sale by id 
 
         [HttpGet("{id}")]
@@ -63,13 +63,6 @@ namespace inventory.Controllers
                 return NotFound("Sale not found");
             return Ok(sale);
         }
-
-
-        //post sale
-        //POST:sale
-
-       
-
 
         //post : sale/invoice
         [HttpPost()]
@@ -100,11 +93,35 @@ namespace inventory.Controllers
             var invoices = _repo.getallinvoices();
             return Ok(invoices);
         }
+
+
+        // PUT: Sale/1
+        [HttpPut()]
+        public IActionResult UpdateSale([FromBody] Sale sale)
+        {
+            if (sale == null) 
+                return BadRequest("Invalid sale data.");
+
+            string result = _repo.UpdateSale(sale);
+
+            if (result.Contains("successfully"))
+                return Ok(new { message = result });
+
+            if (result == "Sale not found")
+                return NotFound(result);
+
+            return BadRequest(result);
+        }
+
+        // DELETE: Sale/1
+        [HttpDelete("{id}")]
+        public IActionResult DeleteSale(int id)
+        {
+            bool deleted = _repo.DeleteSale(id);
+            if (!deleted) return NotFound("Sale record not found or could not be deleted.");
+
+            return Ok(new { message = "Sale and its details deleted successfully." });
+        }
+
     }
 }
-
-
-//public IActionResult Index()
-//{
-//    return View();
-//}

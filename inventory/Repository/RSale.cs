@@ -6,9 +6,12 @@ namespace inventory.Repository
     public class RSale
     {
         private readonly string connectionString;
-        public RSale(IConfiguration configuration)
+        private readonly RSaleDetail _saleDetailRepo;
+
+        public RSale(IConfiguration configuration, RSaleDetail saleDetailRepo)
         {
             connectionString = configuration.GetConnectionString("DefaultConnection");
+            _saleDetailRepo = saleDetailRepo;
         }
 
         //get all sales
@@ -45,6 +48,7 @@ namespace inventory.Repository
         //    return sales;
         //}
 
+
         //get sales with pagination+ filter
         public List<Sale> GetSales(
             int pageNumber,
@@ -57,6 +61,7 @@ namespace inventory.Repository
             List<Sale> sales = new List<Sale>();
             using (SqlConnection con = new SqlConnection(connectionString))
             {
+                con.Open();
                 string query = @" select * from sales
                                 where
                                 (@FromDate IS NULL OR sdate >= @FromDate)
@@ -67,83 +72,83 @@ namespace inventory.Repository
                                 OFFSET @Offset ROWS
                                 FETCH NEXT @PageSize ROWS ONLY";
 
-                SqlCommand cmd = new SqlCommand(query, con);
-                cmd.Parameters.AddWithValue("@FromDate", (object?)fromDate ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ToDate", (object?)toDate ?? DBNull.Value);
-                //cmd.Parameters.AddWithValue("@Pid", (object?)pid ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Cid", (object?)cid ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Offset", (pageNumber - 1) * pageSize);
-                cmd.Parameters.AddWithValue("@PageSize", pageSize);
-
-                con.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
+                using (SqlCommand cmd = new SqlCommand(query, con))
                 {
-                    sales.Add(new Sale
-                    {
-                        Sid = (int)reader["sid"],
-                        Sdate = (DateTime)reader["sdate"],
-                        //Squantity = (int)reader["squantity"],
-                        //Pid = (int)reader["pid"],
-                        Cid = (int)reader["cid"],
-                        //Sprice = (decimal)reader["sprice"],
-                        //Srate = (decimal)reader["srate"],
-                        Totalmnt = (decimal)reader["totalmnt"],
-                        invoicedate = reader["invoicedate"] == DBNull.Value ? null: (DateTime?)reader["invoicedate"],
-                        createdat = (DateTime)reader["createdat"],
-                        createdby = reader["createdby"].ToString()!,
-                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
-                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
-                    });
-                }
+                    cmd.Parameters.AddWithValue("@FromDate", (object?)fromDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ToDate", (object?)toDate ?? DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@Pid", (object?)pid ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Cid", (object?)cid ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Offset", (pageNumber - 1) * pageSize);
+                    cmd.Parameters.AddWithValue("@PageSize", pageSize);
 
-            }
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+
+                        while (reader.Read())
+                        {
+                            sales.Add(new Sale
+                            {
+                                Sid = (int)reader["sid"],
+                                Sdate = (DateTime)reader["sdate"],
+                                Cid = (int)reader["cid"],
+                                Totalmnt = (decimal)reader["totalmnt"],
+                                invoicedate = reader["invoicedate"] == DBNull.Value ? null : (DateTime?)reader["invoicedate"],
+                                createdat = (DateTime)reader["createdat"],
+                                createdby = reader["createdby"].ToString()!,
+                                modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                                modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString(),
+                                SaleDetails= _saleDetailRepo.GetSaleDetail((int)reader["sid"], con)
+                            });
+                        }
+                    }
+                    
+                }
+                }
             return sales;
         }
         
             
-
-
-
         //get sale by id
         public Sale GetSaleById(int id)
         {
             Sale sale = null;
             using (SqlConnection con = new SqlConnection(connectionString))
             {
+                
                 string query = "SELECT * FROM sales WHERE  sid = @Sid";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.Parameters.AddWithValue("@Sid", id);
-
                 con.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-                if (reader.Read())
-                {
-                    sale = new Sale
-                    {
-                        Sid = (int)reader["sid"],
-                        Sdate = (DateTime)reader["sdate"],
-                        //Squantity = (int)reader["squantity"],
-                        //Pid = (int)reader["pid"],
-                        Cid = (int)reader["cid"],
-                        //Sprice = (decimal)reader["sprice"],
-                        //Srate = (decimal)reader["srate"],
-                        Totalmnt = (decimal)reader["totalmnt"],
-                        invoicedate = (DateTime)reader["invoicedate"],
-                        createdat = (DateTime)reader["createdat"],
-                        createdby = reader["createdby"].ToString()!,
-                        modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
-                        modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
 
-                    };
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        sale = new Sale
+                        {
+                            Sid = (int)reader["sid"],
+                            Sdate = (DateTime)reader["sdate"],
+                            Cid = (int)reader["cid"],
+                            Totalmnt = (decimal)reader["totalmnt"],
+                            invoicedate = (DateTime)reader["invoicedate"],
+                            createdat = (DateTime)reader["createdat"],
+                            createdby = reader["createdby"].ToString()!,
+                            modifiedat = reader["modifiedat"] == DBNull.Value ? null : (DateTime?)reader["modifiedat"],
+                            modifiedby = reader["modifiedby"] == DBNull.Value ? null : reader["modifiedby"].ToString()
+
+                        };
+                    }
+                }
+                if (sale != null)
+                {
+                    sale.SaleDetails = _saleDetailRepo.GetSaleDetail(sale.Sid, con);
                 }
             }
+            
             return sale;
         }
 
-
-       
 
         // create invoice + details
 
@@ -236,34 +241,128 @@ namespace inventory.Repository
                         });
                     }
                 }
+
+
                 //get saleDetails 
 
-                foreach (var saale in invoices)
+                foreach(var sale in invoices)
                 {
-                    string q2 = "SELECT * FROM saledetails where sid = @sid";
-                    SqlCommand c2 = new SqlCommand(q2, con);
-                    c2.Parameters.AddWithValue("@Sid", saale.Sid);
-
-                    using (SqlDataReader rdr = c2.ExecuteReader())
-                    {
-                        while (rdr.Read())
-                        {
-                            saale.SaleDetails.Add(new SaleDetail
-                            {
-                                SaleDetailId = (int)rdr["saledetailid"],
-                                Sid = (int)rdr["sid"],
-                                Pid = (int)rdr["pid"],
-                                Quantity = (int)rdr["quantity"],
-                                Rate = (decimal)rdr["rate"],
-                                Price = (decimal)rdr["price"],
-                                Total = (decimal)rdr["total"]
-                            });
-                        }
-                    }
+                    sale.SaleDetails = _saleDetailRepo.GetSaleDetail(sale.Sid, con);
                 }
+
             }
             return invoices;
         }
+
+
+
+
+        // Update Sale (Master + Details)
+        public string UpdateSale(Sale sales)
+        {
+            var existing = GetSaleById(sales.Sid);
+            if (existing == null) 
+                return "Sale not found";
+
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                con.Open();
+                SqlTransaction tran = con.BeginTransaction();
+
+                try
+                {
+                    // 1. Update Sale Master record (Preserve logic)
+                    string updateMasterQuery = @"UPDATE sales SET 
+                                        sdate = @Sdate, 
+                                        cid = @Cid, 
+                                        totalmnt = @Totalmnt, 
+                                        invoicedate = @Invoicedate,
+                                        modifiedat = @Modifiedat,
+                                        modifiedby = @Modifiedby
+                                        WHERE sid = @Sid";
+
+                    SqlCommand cmdMaster = new SqlCommand(updateMasterQuery, con, tran);
+                    cmdMaster.Parameters.AddWithValue("@Sid", sales.Sid);
+
+                    // If incoming date is default, keep existing
+                    cmdMaster.Parameters.AddWithValue("@Sdate", sales.Sdate == default ? existing.Sdate : sales.Sdate);
+                    cmdMaster.Parameters.AddWithValue("@Cid", sales.Cid <= 0 ? existing.Cid : sales.Cid);
+                    cmdMaster.Parameters.AddWithValue("@Totalmnt", sales.Totalmnt <= 0 ? existing.Totalmnt : sales.Totalmnt);
+                    cmdMaster.Parameters.AddWithValue("@Invoicedate", (object?)sales.invoicedate ?? (object?)existing.invoicedate ?? DBNull.Value);
+                    cmdMaster.Parameters.AddWithValue("@Modifiedat", DateTime.Now);
+                    cmdMaster.Parameters.AddWithValue("@Modifiedby", sales.modifiedby ?? "John");
+
+                    cmdMaster.ExecuteNonQuery();
+
+                    // 2. If new details are provided, refresh the SaleDetails list
+                    if (sales.SaleDetails != null && sales.SaleDetails.Any())
+                    {
+                        // Delete old details first
+                        string deleteDetailsQuery = "DELETE FROM saledetails WHERE sid = @Sid";
+                        SqlCommand cmdDel = new SqlCommand(deleteDetailsQuery, con, tran);
+                        cmdDel.Parameters.AddWithValue("@Sid", sales.Sid);
+                        cmdDel.ExecuteNonQuery();
+
+                        // Insert new details
+                        foreach (var item in sales.SaleDetails)
+                        {
+                            string insertDetailQuery = @"INSERT INTO saledetails (sid, pid, quantity, rate, price, total) 
+                                                VALUES (@Sid, @Pid, @Quantity, @Rate, @Price, @Total)";
+                            SqlCommand cmdDetail = new SqlCommand(insertDetailQuery, con, tran);
+                            cmdDetail.Parameters.AddWithValue("@Sid", sales.Sid);
+                            cmdDetail.Parameters.AddWithValue("@Pid", item.Pid);
+                            cmdDetail.Parameters.AddWithValue("@Quantity", item.Quantity);
+                            cmdDetail.Parameters.AddWithValue("@Rate", item.Rate);
+                            cmdDetail.Parameters.AddWithValue("@Price", item.Price);
+                            cmdDetail.Parameters.AddWithValue("@Total", item.Total);
+                            cmdDetail.ExecuteNonQuery();
+                        }
+                    }
+
+                    tran.Commit();
+                    return "Sale updated successfully";
+                }
+                catch (Exception ex)
+                {
+                    tran.Rollback();
+                    return $"Update failed: {ex.Message}";
+                }
+            }
+        }
+
+        // Delete Sale (Master + Details)
+        public bool DeleteSale(int id)
+        {
+            using (SqlConnection con = new SqlConnection(connectionString))
+            {
+                con.Open();
+                SqlTransaction tran = con.BeginTransaction();
+
+                try
+                {
+                    // 1. Delete details first (Referential Integrity)
+                    string deleteDetails = "DELETE FROM saledetails WHERE sid = @Sid";
+                    SqlCommand cmdDetails = new SqlCommand(deleteDetails, con, tran);
+                    cmdDetails.Parameters.AddWithValue("@Sid", id);
+                    cmdDetails.ExecuteNonQuery();
+
+                    // 2. Delete Master record
+                    string deleteMaster = "DELETE FROM sales WHERE sid = @Sid";
+                    SqlCommand cmdMaster = new SqlCommand(deleteMaster, con, tran);
+                    cmdMaster.Parameters.AddWithValue("@Sid", id);
+                    int rows = cmdMaster.ExecuteNonQuery();
+
+                    tran.Commit();
+                    return rows > 0;
+                }
+                catch
+                {
+                    tran.Rollback();
+                    return false;
+                }
+            }
+        }
+
 
 
     }

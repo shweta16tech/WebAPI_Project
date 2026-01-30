@@ -19,7 +19,7 @@ namespace inventory.Controllers
         private readonly RUser _repo;
         private readonly IConfiguration _configuration;
 
-        public UserController(RUser repo,IConfiguration configuration)
+        public UserController(RUser repo, IConfiguration configuration)
         {
             _repo = repo;
             _configuration = configuration;
@@ -46,9 +46,9 @@ namespace inventory.Controllers
         {
             var existingUser = _repo.GetUserByName(dto.Uname);
             if (existingUser != null)
-                return BadRequest("Username already exists.Please choose a different one"); 
+                return BadRequest("Username already exists.Please choose a different one");
 
-         
+
             var user = new User
             {
                 Uid = dto.Uid,
@@ -70,7 +70,7 @@ namespace inventory.Controllers
         //login
         [HttpPost()]
         [Route("Login")]
-        [AllowAnonymous]   
+        [AllowAnonymous]
 
         public IActionResult Login(LoginDto dto)
         {
@@ -90,12 +90,43 @@ namespace inventory.Controllers
 
             //Generate JWT
             var token = Helpers.JwtHelper.GenerateToken(user, _configuration);
-            
-            return Ok(new {Token=token,Username=user.Uname});
-           
+
+            return Ok(new { Token = token, Username = user.Uname });
+
         }
 
 
+
+        // PUT: /User/1
+        [HttpPut()]
+        public IActionResult UpdateUser([FromBody] UpdateUserDto dto)
+        {
+            var existing = _repo.GetUserById(dto.Uid);
+            if (existing == null) 
+                return NotFound("User not found.");
+
+            // Prepare a temporary user object for the repository logic
+            var userUpdate = new User
+            {
+                Uid = dto.Uid,
+                Uname = dto.Uname ?? existing.Uname,
+                Uemail = dto.Uemail,
+                modifiedby = "John" 
+            };
+
+            _repo.UpdateUser(userUpdate, dto.Upass);
+            return Ok("User updated successfully.");
+        }
+
+        // DELETE: /User/1
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(int id)
+        {
+            bool deleted = _repo.DeleteUser(id);
+            if (!deleted) return NotFound("User not found.");
+
+            return Ok("User deleted successfully.");
+        }
 
 
         //public IActionResult Index()

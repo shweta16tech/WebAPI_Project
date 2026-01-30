@@ -3,6 +3,7 @@ using inventory.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
+
 namespace inventory.Controllers
 {
     [Route("[controller]")]
@@ -47,12 +48,44 @@ namespace inventory.Controllers
             _repo.AddCustomer(customer);
             return Ok("User added successfully");
         }
+
+
+
+        // PUT: api/Customer/5
+        // PUT: Customer/203
+        [HttpPut()]
+        public IActionResult UpdateCustomer( [FromBody] Customer customer)
+        {
+            if (customer == null) 
+                return BadRequest();
+
+            var checkExisting = _repo.GetCustomerById(customer.Cid);
+            if (checkExisting == null) 
+                return NotFound($"Customer does not exist.");
+
+            // You can set the modifier here
+            customer.modifiedby = "AdminUser";
+
+            _repo.UpdateCustomer( customer);
+
+            return Ok("Customer updated successfully.");
+        }
+
+
+
+        // DELETE: Customer/203
+        [HttpDelete("{id}")]
+        public IActionResult DeleteCustomer(int id)
+        {
+            bool isDeleted = _repo.DeleteCustomer(id);
+
+            if (!isDeleted)
+            {
+                return NotFound(new { message = $"Customer with ID {id} not found." });
+            }
+
+            return Ok(new { message = "Customer deleted successfully." });
+        }
+
     }
 }
-
-
-
-//public IActionResult Index()
-//{
-//    return View();
-//}
